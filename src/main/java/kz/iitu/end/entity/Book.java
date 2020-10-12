@@ -1,8 +1,11 @@
 package kz.iitu.end.entity;
 
+import lombok.NoArgsConstructor;
+
 import javax.persistence.*;
 
 @Entity
+@Table(name="book")
 public class Book {
 
     @Id
@@ -10,7 +13,7 @@ public class Book {
     private Long id;
     @Column(unique = true)
     private String title;
-
+    private Double price;
 
     public Book(){}
 
@@ -53,11 +56,22 @@ public class Book {
         this.title = title;
     }
 
+    public Double getPrice()
+    {
+        return price;
+    }
+
+    public void setPrice(Double price)
+    {
+        this.price = price;
+    }
+
 
     @Override
     public String toString() {
         return "Book{" +
                 "id=" + id +
-                ", title='" + title ;
+                ", title='" + title +
+                ", price='" + price ;
     }
 }
