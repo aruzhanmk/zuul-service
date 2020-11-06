@@ -1,4 +1,6 @@
 package kz.iitu.end.controller;
+import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
+import com.netflix.hystrix.contrib.javanica.annotation.HystrixProperty;
 import io.swagger.annotations.Api;
 import kz.iitu.end.entity.Book;
 import kz.iitu.end.entity.Users;
@@ -19,27 +21,50 @@ public class AdminController {
     @Autowired
     private RestTemplate restTemplate;
 
-        @GetMapping("/books/")
-    public ModelAndView getAllBooks() { ResponseEntity<List<Book>> response = restTemplate.exchange(
+//        @GetMapping("/books/")
+//    public ModelAndView getAllBooks() { ResponseEntity<List<Book>> response = restTemplate.exchange(
+//            "http://book-service/books/list", HttpMethod.GET, null, new ParameterizedTypeReference<List<Book>>() { });
+//        List<Book> books = response.getBody();
+//            ModelAndView modelAndView = new ModelAndView("books");
+//            modelAndView.addObject("booklist", books);
+//        return modelAndView;
+//    }
+
+    @GetMapping("/books/")
+    @HystrixCommand
+    public List<Book> getAllBooks() { ResponseEntity<List<Book>> response = restTemplate.exchange(
             "http://book-service/books/list", HttpMethod.GET, null, new ParameterizedTypeReference<List<Book>>() { });
         List<Book> books = response.getBody();
-            ModelAndView modelAndView = new ModelAndView("books");
-            modelAndView.addObject("booklist", books);
-        return modelAndView;
-    }
-    @RequestMapping("/books/delete/{id}")
-    public ModelAndView deleteBookById(@PathVariable("id") Long id) {
-        Book book = restTemplate.getForObject("http://book-service/books/delete/" + id, Book.class);
-        return getAllBooks();
+        return books;
     }
 
+
     @RequestMapping("/books/{id}")
+    @HystrixCommand(fallbackMethod = "getBookByIdFallback",
+            threadPoolKey = "BookById",
+            threadPoolProperties = {
+                    @HystrixProperty(name="coreSize", value="100"),
+                    @HystrixProperty(name="maxQueueSize", value="50"),
+            })
     public Book getBookById(@PathVariable("id") Long id) {
         Book book = restTemplate.getForObject("http://book-service/books/" + id, Book.class);
         return book;
     }
+    public Book getBookByIdFallback(@PathVariable("id") Long id) {
+        return new Book("No book", (double) 0);
+    }
+
+
+    @RequestMapping("/books/delete/{id}")
+    @HystrixCommand
+    public Book deleteBookById(@PathVariable("id") Long id) {
+        Book book = restTemplate.getForObject("http://book-service/books/delete/" + id, Book.class);
+//        return getAllBooks();
+        return book;
+    }
 
     @GetMapping("/users/")
+    @HystrixCommand
     public ModelAndView getAllUsers() {
         ResponseEntity<List<Users>> response = restTemplate.exchange(
                 "http://user-service/users/", HttpMethod.GET, null, new ParameterizedTypeReference<List<Users>>() {
@@ -51,12 +76,14 @@ public class AdminController {
     }
 
     @RequestMapping("/users/delete/{id}")
+    @HystrixCommand
     public ModelAndView deleteUserById(@PathVariable("id") Long id) {
         Users users = restTemplate.getForObject("http://user-service/users/delete/" + id, Users.class);
         return getAllUsers();
     }
 
     @RequestMapping("/users/{id}")
+    @HystrixCommand
     public Users getUserById(@PathVariable("id") Long id) {
         Users users = restTemplate.getForObject("http://user-service/users/" + id, Users.class);
         return users;

@@ -31,9 +31,10 @@ public class Book {
 //    )
 //    private List<Author> authors = new ArrayList<>();
 
-    public Book(String title)
+    public Book(String title, Double price)
     {
         this.title = title;
+        this.price = price;
     }
 
     public Long getId()

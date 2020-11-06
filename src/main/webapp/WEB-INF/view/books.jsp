@@ -45,7 +45,6 @@
 <%--                <td><a href="/books/${book.id}"></a></td>--%>
 
                 <td><a href="/admin/books/delete/${booklist.id}">Delete Book</a>
-
             </tr>
         </c:forEach>
     </table>
